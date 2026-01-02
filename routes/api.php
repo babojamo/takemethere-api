@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\RouteController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [LoginController::class, 'login'])->middleware('guest');
@@ -9,6 +10,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout']);
 });
 
+
+Route::post('/routes', [RouteController::class, 'store']);
+Route::get('/routes/show/{id}', [RouteController::class, 'show']);
+Route::get('/routes/nearest', [RouteController::class, 'nearest']);
 
 // Route::group(['prefix' => 'utils'], function () {
 //     Route::get('/item-types', [UtilityController::class, 'itemTypes'])->name('utils.item_types');
