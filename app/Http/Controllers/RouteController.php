@@ -6,10 +6,15 @@ use App\Http\Requests\NearestRouteRequest;
 use App\Http\Requests\SaveRouteRequest;
 use App\Services\RouteService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class RouteController extends Controller
 {
     public function __construct(protected RouteService $route_service) {}
+
+    public function index() {
+        return response()->json($this->route_service->all());
+    }
 
     /**
      * Store Route
@@ -41,7 +46,7 @@ class RouteController extends Controller
     public function nearest(NearestRouteRequest $request)
     {
         try {
-            $route = $this->route_service->nearest($request);
+            $route = $this->route_service->findRoutes($request);
             return response()->json($route);
         } catch (\Throwable $th) {
             throw $th;

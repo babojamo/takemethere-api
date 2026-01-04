@@ -11,6 +11,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 
+Route::get('/routes', [RouteController::class, 'index']);
 Route::post('/routes', [RouteController::class, 'store']);
 Route::get('/routes/show/{id}', [RouteController::class, 'show']);
 Route::get('/routes/nearest', [RouteController::class, 'nearest']);

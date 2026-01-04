@@ -17,6 +17,13 @@ class Route extends Model
         'name',
         'geom',
         'points',
+
+        'base_fare',
+        'base_fare_minimum_unit',
+        'base_fare_increment',
+        'fare_unit',
+
+        'status'
     ];
 
     protected $casts = [
