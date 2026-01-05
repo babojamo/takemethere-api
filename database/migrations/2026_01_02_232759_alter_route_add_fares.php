@@ -13,10 +13,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('routes', function (Blueprint $table) {
-            $table->float('base_fare')->nullable();
-            $table->float('base_fare_minimum_unit')->nullable()->comment('Base fare minimum unit effective');
-            $table->float('base_fare_increment')->nullable()->comment('Increase fare on succeeding unit');
-            $table->enum('fare_unit', ['km', 'm'])->nullable();
+            $table->float('base_fare')->default(20);
+            $table->float('base_fare_minimum_unit')->default(1)->comment('Base fare minimum unit effective and defaults to 1 KM(base on the fare unit)');
+            $table->float('base_fare_increment')->default(2)->comment('Increase fare on succeeding unit');
+            $table->enum('fare_unit', [RouteConst::DISTANCE_METER, RouteConst::DISTANCE_KM])->default(RouteConst::DISTANCE_KM);
             $table->string('status')->default(RouteConst::STATUS_ACTIVE);
         });
     }
