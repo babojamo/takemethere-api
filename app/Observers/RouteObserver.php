@@ -3,11 +3,11 @@
 namespace App\Observers;
 
 use App\Models\Route;
-use App\Services\RouteEdgeService;
+use App\Services\RouteEdgeService\IRouteEdgeService;
 
 class RouteObserver
 {
-    public function __construct(protected RouteEdgeService $routeEdgeService) {}
+    public function __construct(protected IRouteEdgeService $routeEdgeService) {}
 
     /**
      * Handle the Route "created" event.

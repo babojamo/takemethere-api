@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Traits;
+namespace App\Services\RouteService\Traits;
 
 use App\Models\Route;
 use App\ValueObjects\Coordinate;
@@ -95,6 +95,71 @@ trait RouteDistance
         return null;
     }
 
+    public function trimRoutes(Route $routeA, Route $routeB, $radius = 10)
+    {
+        $row = DB::selectOne("
+ 
+                WITH
+                r AS (
+                SELECT
+                    (SELECT geom FROM routes WHERE id =  ?) AS green,
+                    (SELECT geom FROM routes WHERE id =  ?)  AS blue
+                ),
+                i AS (
+                SELECT
+                    ST_PointOnSurface(
+                    ST_Intersection(green, blue)::geometry
+                    ) AS ip,
+                    green,
+                    blue
+                FROM r
+                WHERE ST_DWithin(green::geography, blue::geography, ?)
+                ),
+                loc AS (
+                SELECT
+                    ST_LineLocatePoint(green, ip) AS g_frac,
+                    ST_LineLocatePoint(blue,  ip) AS b_frac,
+                    green,
+                    blue
+                FROM i
+                ),
+                cut AS (
+                SELECT
+                    ST_LineSubstring(green, 0, g_frac) AS green_cut,
+                    ST_LineSubstring(blue,  b_frac, 1) AS blue_cut
+                FROM loc
+                )
+                SELECT
+                ST_AsGeoJSON(
+                    ST_LineMerge(
+                    ST_Collect(green_cut::geometry, blue_cut::geometry)
+                    )
+                ) AS cut_geom
+                FROM cut;
+            ", [$routeA->id, $routeB->id, $radius]);
+
+        if (!$row || !$row->cut_geom) {
+            return []; // no connection / no cut
+        }
+
+        $geojson = json_decode($row->cut_geom, true);
+        $coordinates = $geojson['coordinates'] ?? [];
+
+        $points = array_map(fn($c) => [
+            'lat' => $c[1],
+            'lng' => $c[0],
+        ], $coordinates);
+
+        return $points;
+    }
+
+    public function recomputeRoutePoints(Route $primaryRoute, Route $nextRoute, $radius = 10)
+    {
+        $trimmed_route = $this->trimRoutes($primaryRoute, $nextRoute, $radius);
+        $primaryRoute->points = $trimmed_route; // Repopulate points on the fly
+        return $primaryRoute;
+    }
+
     /**
      * Compute distance on multiple routes in a path
      * 
@@ -124,9 +189,14 @@ trait RouteDistance
                     $destination
                 );
 
+                $prevRoute = $path[$i - 1];
+
+                $currentPath = $this->recomputeRoutePoints($currentPath, $prevRoute, $radius);
+
                 // Append to routes
                 $routes[] = new Fare(
                     $currentPath,
+                    $startingCoordinate,
                     (float) $distance
                 );
             } else {
@@ -141,9 +211,12 @@ trait RouteDistance
                     $endCoordinate
                 );
 
+                $currentPath = $this->recomputeRoutePoints($currentPath, $routeB, $radius);
+
                 // Append to routes
                 $routes[] = new Fare(
                     $currentPath,
+                    $endCoordinate,
                     (float) $distance
                 );
             }
@@ -156,7 +229,7 @@ trait RouteDistance
         return $routes;
     }
 
-    public function computeDistanceSingleRoutes($path, Coordinate $origin, Coordinate $destination)
+    public function computeDistanceSingleRoutes(Route $path, Coordinate $origin, Coordinate $destination)
     {
         // Compute the distance
         $distance = $this->distanceBetweenCoordinates(
@@ -167,6 +240,7 @@ trait RouteDistance
 
         return new Fare(
             $path,
+            $destination,
             (float) $distance
         );
     }

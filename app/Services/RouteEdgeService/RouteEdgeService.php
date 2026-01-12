@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\RouteEdgeService;
 
 use App\Constants\RouteConst;
 use App\Models\Route;
 use Illuminate\Support\Facades\DB;
 
-class RouteEdgeService
+class RouteEdgeService implements IRouteEdgeService
 {
     /**
      * Create route network

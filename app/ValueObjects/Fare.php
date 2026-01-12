@@ -11,7 +11,8 @@ final class Fare
     public float $estimate_distance;
 
     public function __construct(
-        public Route $route,
+        public Route $route, // Route
+        public $end_coordinate, // End coordinate from trimmed intersecting routes
         protected float $distance
 
     ) {

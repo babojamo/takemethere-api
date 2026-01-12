@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\UserService;
 
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
-class UserService
+class UserService implements IUserService
 {
     public function list(int $perPage = 15): LengthAwarePaginator{
         return User::query()

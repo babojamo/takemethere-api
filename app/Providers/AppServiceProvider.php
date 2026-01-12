@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
-use App\Contracts\UserServiceInterface;
-use App\Services\UserService;
+use App\Services\RouteEdgeService\IRouteEdgeService;
+use App\Services\RouteEdgeService\RouteEdgeService;
+use App\Services\RouteService\IRouteService;
+use App\Services\RouteService\RouteService;
+use App\Services\UserService\IUserService;
+use App\Services\UserService\UserService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //$this->app->bind(UserServiceInterface::class, UserService::class);
+        $this->registerServices();
     }
 
     /**
@@ -22,5 +26,15 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         //
+    }
+
+    /**
+     * Register services
+     */
+    protected function registerServices()
+    {
+        $this->app->bind(IRouteEdgeService::class, RouteEdgeService::class);
+        $this->app->bind(IRouteService::class, RouteService::class);
+        $this->app->bind(IUserService::class, UserService::class);
     }
 }

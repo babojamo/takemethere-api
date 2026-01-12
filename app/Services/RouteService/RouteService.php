@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\RouteService;
 
 use App\Constants\RouteConst;
 use App\Http\Requests\NearestRouteRequest;
 use App\Http\Requests\SaveRouteRequest;
 use App\Models\Route;
-use App\Traits\RouteDistance;
+use App\Services\RouteService\Traits\RouteDistance;
 use App\ValueObjects\Coordinate;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
-class RouteService
+class RouteService implements IRouteService
 {
     use RouteDistance;
 
@@ -154,10 +154,14 @@ class RouteService
             WITH RECURSIVE start_routes AS (
                 SELECT id FROM routes
                 WHERE ST_DWithin(geom, ST_MakePoint(?,?)::geography, ?) and status = 'active'
-            ), end_routes AS (
+            ),
+            
+            end_routes AS (
                 SELECT id FROM routes
                 WHERE ST_DWithin(geom, ST_MakePoint(?,?)::geography, ?) and status = 'active'
-            ), walk AS (
+            ), 
+
+            walk AS (
                 SELECT s.id AS current, ARRAY[s.id] AS path, 0 AS hops
                 FROM start_routes s
                 UNION ALL
@@ -170,7 +174,7 @@ class RouteService
             FROM walk
             WHERE current IN (SELECT id FROM end_routes)
             ORDER BY array_length(path, 1) ASC
-            LIMIT 3
+            LIMIT 2
         ", [
             $origin->lng,
             $origin->lat,

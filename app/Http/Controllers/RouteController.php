@@ -4,13 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\NearestRouteRequest;
 use App\Http\Requests\SaveRouteRequest;
-use App\Services\RouteService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use App\Services\RouteService\IRouteService;
 
 class RouteController extends Controller
 {
-    public function __construct(protected RouteService $route_service) {}
+    public function __construct(protected IRouteService $route_service) {}
 
     public function index() {
         return response()->json($this->route_service->all());
