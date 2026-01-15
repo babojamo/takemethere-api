@@ -156,7 +156,7 @@ trait RouteDistance
     public function recomputeRoutePoints(Route $primaryRoute, Route $nextRoute, $radius = 10)
     {
         $trimmed_route = $this->trimRoutes($primaryRoute, $nextRoute, $radius);
-        $primaryRoute->points = $trimmed_route; // Repopulate points on the fly
+        //$primaryRoute->points = $trimmed_route; // Repopulate points on the fly
         return $primaryRoute;
     }
 
