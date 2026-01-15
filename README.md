@@ -1,4 +1,4 @@
-## About Takemethere
+## About GORA
 
 First Time Setup
 - php artisan db:seed --class=SQLSeeder
