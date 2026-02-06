@@ -14,9 +14,9 @@ services:
       DB_CONNECTION: "pgsql"
       DB_HOST: "postgres"
       DB_PORT: "5432"
-      DB_USERNAME: "${DB_USERNAME}"
-      DB_DATABASE: "${DB_DATABASE}"
-      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_USERNAME: "${DOCKER_DB_USERNAME}"
+      DB_DATABASE: "${DOCKER_DB_DATABASE}"
+      DB_PASSWORD: "${DOCKER_DB_PASSWORD}"
     networks:
       - gora
     depends_on:
@@ -31,13 +31,13 @@ services:
     volumes:
       - "postgres-data:/var/lib/postgresql/data"
     environment:
-      POSTGRES_DB: "${DB_DATABASE}"
-      POSTGRES_USER: "${DB_USERNAME}"
-      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DOCKER_DB_DATABASE}"
+      POSTGRES_USER: "${DOCKER_DB_USERNAME}"
+      POSTGRES_PASSWORD: "${DOCKER_DB_PASSWORD}"
     networks:
       - gora
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DOCKER_DB_USERNAME} -d ${DOCKER_DB_DATABASE}"]
       interval: 10s
       timeout: 5s
       retries: 10
