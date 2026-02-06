@@ -1,0 +1,28 @@
+services:
+  web:
+    container_name: gora_local
+    build:
+      context: ./docker
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${APP_PORT:-8923}:8000"
+      - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
+    volumes:
+      - "./:/app"
+    environment:
+      DB_CONNECTION: "pgsql"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_USERNAME: "${DOCKER_DB_USERNAME}"
+      DB_DATABASE: "${DOCKER_DB_DATABASE}"
+      DB_PASSWORD: "${DOCKER_DB_PASSWORD}"
+    networks:
+      - gora
+
+networks:
+  gora:
+    driver: bridge
+
+volumes:
+  postgres-data:
