@@ -3,5 +3,5 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    abort(404);
+    return redirect()->away(config('app.next_url'));
 });
