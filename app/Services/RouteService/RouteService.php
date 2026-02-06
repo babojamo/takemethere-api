@@ -12,6 +12,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
@@ -149,8 +150,9 @@ class RouteService implements IRouteService
      */
     public function paths(Coordinate $origin, Coordinate $destination, float $radius = 50, $hoops = 10): SupportCollection
     {
-        $paths = [];
-        $result = DB::select("
+        try {
+            $paths = [];
+            $result = DB::select("
             WITH RECURSIVE start_routes AS (
                 SELECT id FROM routes
                 WHERE ST_DWithin(geom, ST_MakePoint(?,?)::geography, ?) and status = 'active'
@@ -176,26 +178,30 @@ class RouteService implements IRouteService
             ORDER BY array_length(path, 1) ASC
             LIMIT 2
         ", [
-            $origin->lng,
-            $origin->lat,
-            $radius,
-            $destination->lng,
-            $destination->lat,
-            $radius,
-            $hoops
-        ]);
+                $origin->lng,
+                $origin->lat,
+                $radius,
+                $destination->lng,
+                $destination->lat,
+                $radius,
+                $hoops
+            ]);
 
-        foreach ($result as $value) {
-            $ids = $this->parsePgArray($value->path);
-            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            foreach ($result as $value) {
+                $ids = $this->parsePgArray($value->path);
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-            // Set paths
-            $paths[] = Route::whereIn('id', $ids)
-                ->orderByRaw("array_position(ARRAY[$placeholders]::uuid[], id)", $ids) // Order the routes based on the order of the path
-                ->get();
+                // Set paths
+                $paths[] = Route::whereIn('id', $ids)
+                    ->orderByRaw("array_position(ARRAY[$placeholders]::uuid[], id)", $ids) // Order the routes based on the order of the path
+                    ->get();
+            }
+
+            return collect($paths);
+        } catch (\Throwable $th) {
+            Log::error("RouteService[paths]:", [$th->getMessage()]);
+            throw $th;
         }
-
-        return collect($paths);
     }
 
     /**

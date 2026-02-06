@@ -6,6 +6,7 @@ use App\Models\Route;
 use App\ValueObjects\Coordinate;
 use App\ValueObjects\Fare;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 trait RouteDistance
 {
@@ -170,63 +171,68 @@ trait RouteDistance
      */
     public function computeDistanceMultipleRoutes($path, Coordinate $origin, Coordinate $destination, float $radius = 10)
     {
-        $routes = [];
-        $startingCoordinate = $origin;
-        $endCoordinate = null;
+        try {
+            
+            $routes = [];
+            $startingCoordinate = $origin;
+            $endCoordinate = null;
 
-        $lastIndex = count($path) - 1;
+            $lastIndex = count($path) - 1;
 
-        // Multiple paths
-        for ($i = 0; $i < count($path); $i++) {
+            // Multiple paths
+            for ($i = 0; $i < count($path); $i++) {
 
-            $currentPath = $path[$i];
+                $currentPath = $path[$i];
 
-            if ($i === $lastIndex) {
-                // Compute the distance between the last recorded coordinate and the destiantion coordinates
-                $distance = $this->distanceBetweenCoordinates(
-                    $currentPath,
-                    $startingCoordinate,
-                    $destination
-                );
+                if ($i === $lastIndex) {
+                    // Compute the distance between the last recorded coordinate and the destiantion coordinates
+                    $distance = $this->distanceBetweenCoordinates(
+                        $currentPath,
+                        $startingCoordinate,
+                        $destination
+                    );
 
-                $prevRoute = $path[$i - 1];
+                    $prevRoute = $i == 0 ? $path[$i] : $path[$i - 1];
 
-                $currentPath = $this->recomputeRoutePoints($currentPath, $prevRoute, $radius);
+                    $currentPath = $this->recomputeRoutePoints($currentPath, $prevRoute, $radius);
 
-                // Append to routes
-                $routes[] = new Fare(
-                    $currentPath,
-                    $startingCoordinate,
-                    (float) $distance
-                );
-            } else {
+                    // Append to routes
+                    $routes[] = new Fare(
+                        $currentPath,
+                        $startingCoordinate,
+                        (float) $distance
+                    );
+                } else {
 
-                $routeB = $path[$i + 1];
-                $endCoordinate = $this->intersectingCoordinates($currentPath, $routeB, $radius);
+                    $routeB = $path[$i + 1];
+                    $endCoordinate = $this->intersectingCoordinates($currentPath, $routeB, $radius);
 
-                // Compute the distance between the last recorded coordinate and the last recorded starting coordinates
-                $distance = $this->distanceBetweenCoordinates(
-                    $currentPath,
-                    $startingCoordinate,
-                    $endCoordinate
-                );
+                    // Compute the distance between the last recorded coordinate and the last recorded starting coordinates
+                    $distance = $this->distanceBetweenCoordinates(
+                        $currentPath,
+                        $startingCoordinate,
+                        $endCoordinate
+                    );
 
-                $currentPath = $this->recomputeRoutePoints($currentPath, $routeB, $radius);
+                    $currentPath = $this->recomputeRoutePoints($currentPath, $routeB, $radius);
 
-                // Append to routes
-                $routes[] = new Fare(
-                    $currentPath,
-                    $endCoordinate,
-                    (float) $distance
-                );
+                    // Append to routes
+                    $routes[] = new Fare(
+                        $currentPath,
+                        $endCoordinate,
+                        (float) $distance
+                    );
+                }
+
+                // Set the starting as end coordinates for the next distance computation
+                $startingCoordinate = $endCoordinate;
             }
 
-
-            // Set the starting as end coordinates for the next distance computation
-            $startingCoordinate = $endCoordinate;
+            return $routes;
+        } catch (\Throwable $th) {
+            Log::error("RouteDistanceTrait[computeDistanceMultipleRoutes]:", [$th->getMessage()]);
+            throw $th;
         }
-
-        return $routes;
     }
 
     public function computeDistanceSingleRoutes(Route $path, Coordinate $origin, Coordinate $destination)
